@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'dummy_key',
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy_key');
 
 export async function POST(req: Request) {
   try {
     const { startup_idea } = await req.json();
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: "OPENAI_API_KEY is missing." }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: "GEMINI_API_KEY is missing." }, { status: 500 });
     }
 
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `
 Generate a 5-slide pitch deck for the following startup idea: "${startup_idea}"
 Return ONLY a valid JSON object with the following structure:
@@ -21,21 +20,19 @@ Return ONLY a valid JSON object with the following structure:
     {
       "title": "Slide Title",
       "content": ["Point 1", "Point 2"],
-      "visual_type": "none" // can be "none", "chart_tam", "chart_mrr", or "metric"
+      "visual_type": "none"
     }
   ]
 }
-Ensure there are exactly 5 slides covering: The Problem, The Solution, Market Size (use chart_tam), Financial Projections (use chart_mrr), and The Ask (use metric).
+Ensure there are exactly 5 slides covering: The Problem, The Solution, Market Size (use chart_tam), Financial Projections (use chart_mrr), and The Ask (use metric). Do not wrap in markdown code blocks. Just return the JSON.
 `;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-    });
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text();
+    // Remove markdown wrapping if gemini adds it
+    responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
 
-    const deckData = JSON.parse(response.choices[0].message.content || '{}');
+    const deckData = JSON.parse(responseText || '{}');
     
     return NextResponse.json(deckData);
   } catch (error: any) {
