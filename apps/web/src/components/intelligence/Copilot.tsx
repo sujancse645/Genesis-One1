@@ -12,7 +12,7 @@ export default function Copilot() {
   ]);
   const [isTyping, setIsTyping] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
     
     setMessages((prev) => [...prev, { role: "user", text: input }]);
@@ -21,17 +21,19 @@ export default function Copilot() {
     setIsTyping(true);
 
     // Simulate AI response
-    setTimeout(() => {
-      let responseText = "I am analyzing the current market conditions for that strategy.";
-      if (currentInput.toLowerCase().includes("pricing")) {
-        responseText = "Based on our Competitor Threat Matrix, lowering your CAC by 15% would allow you to under-price competitors while maintaining a 75% gross margin.";
-      } else if (currentInput.toLowerCase().includes("investor") || currentInput.toLowerCase().includes("funding")) {
-        responseText = "Seed investors will look for strong defensibility. Focus on highlighting our proprietary AI orchestration engine in the Pitch Deck.";
-      }
-
-      setMessages((prev) => [...prev, { role: "ai", text: responseText }]);
+    try {
+      const res = await fetch('/api/copilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: currentInput, history: messages.map(m => ({ role: m.role, content: m.text })) })
+      });
+      const data = await res.json();
+      setMessages((prev) => [...prev, { role: "ai", text: data.response }]);
+    } catch (err) {
+      setMessages((prev) => [...prev, { role: "ai", text: "Error: Neural Core disconnected." }]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (

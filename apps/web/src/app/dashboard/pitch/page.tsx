@@ -19,22 +19,23 @@ export default function PitchDeckPage() {
   const [deck, setDeck] = useState<PitchDeck | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [idea, setIdea] = useState("");
 
   const handleGenerate = async () => {
+    if (!idea) return;
     setIsLoading(true);
     try {
-      // Self-contained mock data for Vercel demo
-      await new Promise(r => setTimeout(r, 2000));
-      const data = {
-        slides: [
-          { title: "The Problem", content: ["Developers waste 40% of time on boilerplate.", "Current AI tools lack full-stack context."], visual_type: "none" },
-          { title: "The Solution", content: ["Autonomous multi-agent orchestration.", "End-to-end repository generation."], visual_type: "none" },
-          { title: "Market Size", content: ["$120B TAM by 2030.", "Enterprise SaaS is the primary wedge."], visual_type: "chart_tam" },
-          { title: "Financial Projections", content: ["$10M ARR in Year 5.", "90% gross margins."], visual_type: "chart_mrr" },
-          { title: "The Ask", content: ["$1.5M Seed Round.", "18 months runway."], visual_type: "metric" }
-        ]
-      };
-      setDeck(data);
+      const res = await fetch('/api/pitch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ startup_idea: idea }),
+      });
+      const data = await res.json();
+      if (data.slides) {
+        setDeck(data);
+      } else {
+        alert("Failed to generate deck. Check API logs.");
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -120,7 +121,10 @@ export default function PitchDeckPage() {
         </div>
         
         {deck && (
-          <button className="flex items-center text-sm bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-lg transition-colors border border-neutral-700">
+          <button 
+            onClick={() => window.print()}
+            className="flex items-center text-sm bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-lg transition-colors border border-neutral-700"
+          >
             <Download className="w-4 h-4 mr-2" /> Export to PDF
           </button>
         )}
@@ -128,10 +132,17 @@ export default function PitchDeckPage() {
 
       <div className="flex-1 flex items-center justify-center p-8 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-neutral-950 to-neutral-950">
         {!deck && !isLoading && (
-          <div className="text-center animate-in fade-in zoom-in duration-500">
+          <div className="text-center animate-in fade-in zoom-in duration-500 max-w-xl w-full">
+            <input 
+              type="text" 
+              value={idea}
+              onChange={(e) => setIdea(e.target.value)}
+              placeholder="Describe your startup idea to generate a deck..."
+              className="w-full bg-black/50 border border-neutral-800 rounded-lg p-4 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none mb-6"
+            />
             <button 
               onClick={handleGenerate}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-[0_0_30px_rgba(37,99,235,0.4)] text-lg flex items-center"
+              className="w-full justify-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-[0_0_30px_rgba(37,99,235,0.4)] text-lg flex items-center"
             >
               <Presentation className="mr-3 w-6 h-6" /> Generate Pitch Deck
             </button>

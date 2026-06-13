@@ -46,41 +46,39 @@ export default function BoardroomPage() {
     scrollToBottom();
   }, [messages]);
 
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+
   const initiateSession = () => {
     setIsSessionActive(true);
-    setMessages([{ role: 'system', agent: 'System', message: 'Board session initiated. Synthesizing agents...' }]);
-    
-    // Self-contained mock data for Vercel demo
-    const mockMessages = [
-      { agent: 'Sarah (CEO)', role: 'CEO', message: 'Team, we need to finalize our GTM strategy for the new AI agent platform. Marketing, what is the CAC looking like for enterprise clients?' },
-      { agent: 'David (Marketing)', role: 'Marketing', message: 'If we target Fortune 500 exclusively, CAC will be around $15,000, but LTV is north of $120k. The real issue is the sales cycle length.' },
-      { agent: 'Marcus (CTO)', role: 'CTO', message: 'I can build a self-serve tier that reduces the sales cycle to zero, but we would need to simplify the multi-agent orchestration UI significantly.' },
-      { agent: 'Elena (Finance)', role: 'Finance', message: 'A self-serve tier would burn through our cloud compute credits too quickly. We only have 18 months of runway left. I vote we stick to enterprise.' },
-      { role: 'system', agent: 'System', message: 'Board reached preliminary consensus: Prioritize Enterprise Sales Motion.' }
-    ];
+    setMessages([{ role: 'system', agent: 'System', message: 'Board session initiated. The Board is ready for your input.' }]);
+  };
 
-    setTimeout(() => {
-      setMessages(prev => [...prev, { agent: mockMessages[0].agent, role: mockMessages[0].role, is_typing: true }]);
-    }, 1000);
+  const handleSend = async () => {
+    if (!input.trim() || !isSessionActive) return;
+    const userMsg = input;
+    setInput("");
+    setMessages(prev => [...prev, { agent: 'Founder', role: 'system', message: `You: ${userMsg}` }]);
+    setIsTyping(true);
 
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < mockMessages.length) {
-        const msg = mockMessages[i];
-        setMessages(prev => {
-          const filtered = prev.filter(m => !m.is_typing);
-          return [...filtered, msg];
-        });
-        i++;
-        if (i < mockMessages.length) {
-          setMessages(prev => [...prev, { agent: mockMessages[i].agent, role: mockMessages[i].role, is_typing: true }]);
-        }
-      } else {
-        clearInterval(interval);
+    try {
+      const res = await fetch('/api/boardroom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: userMsg, 
+          previous_messages: messages.filter(m => m.role !== 'system') 
+        })
+      });
+      const data = await res.json();
+      if (data.agent) {
+        setMessages(prev => [...prev, { agent: data.agent, role: data.role, message: data.message }]);
       }
-    }, 3000);
-
-    return () => clearInterval(interval);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (
@@ -143,6 +141,28 @@ export default function BoardroomPage() {
             )}
           </div>
         ))}
+        {isTyping && (
+          <div className="flex justify-start animate-in slide-in-from-bottom-2 duration-300">
+            <div className="flex items-start max-w-3xl">
+              <div className="w-10 h-10 rounded-full bg-black border border-neutral-700 flex items-center justify-center mr-4 flex-shrink-0 shadow-lg">
+                <Sparkles className="w-5 h-5 text-yellow-400" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-baseline mb-1">
+                  <span className="font-semibold mr-2 text-white">Board</span>
+                  <span className="text-xs text-neutral-500 uppercase font-medium">deliberating</span>
+                </div>
+                <div className="bg-black/60 border border-neutral-800 rounded-2xl rounded-tl-none px-4 py-3 text-neutral-400 flex items-center w-24 shadow-md backdrop-blur-sm">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} className="h-4" />
       </div>
 
@@ -150,11 +170,18 @@ export default function BoardroomPage() {
         <div className="max-w-4xl mx-auto flex shadow-lg">
           <input 
             type="text" 
-            disabled 
-            placeholder={isSessionActive ? "The Board is currently deliberating. Please wait..." : "Click 'Initiate Board Session' to begin."}
-            className="flex-1 bg-black border border-neutral-800 rounded-l-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            disabled={!isSessionActive || isTyping}
+            placeholder={!isSessionActive ? "Click 'Initiate Board Session' to begin." : isTyping ? "Board is deliberating..." : "Address the board..."}
+            className="flex-1 bg-black border border-neutral-800 rounded-l-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:border-purple-500 transition-colors"
           />
-          <button disabled className="bg-neutral-900 text-neutral-600 px-6 rounded-r-lg border border-l-0 border-neutral-800">
+          <button 
+            onClick={handleSend}
+            disabled={!isSessionActive || isTyping} 
+            className="bg-purple-600 hover:bg-purple-500 disabled:bg-neutral-900 text-white disabled:text-neutral-600 px-6 rounded-r-lg transition-colors border border-l-0 border-neutral-800 disabled:border-neutral-800"
+          >
             <Send className="w-5 h-5" />
           </button>
         </div>
