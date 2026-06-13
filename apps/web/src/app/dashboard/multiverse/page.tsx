@@ -13,12 +13,18 @@ export default function MultiversePage() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [warRoom, dna, scenarios] = await Promise.all([
-          fetch("http://localhost:8000/api/multiverse/war-room").then(r => r.json()),
-          fetch("http://localhost:8000/api/multiverse/dna").then(r => r.json()),
-          fetch("http://localhost:8000/api/multiverse/scenarios").then(r => r.json())
-        ]);
-        setData({ warRoom, dna, scenarios });
+        // Self-contained mock data for Vercel demo
+        const mockWarRoom = { startup_win_probability: 78.4, competitor_name: "LegacyCorp Enterprise", pricing_war_result: "Dominant - 40% lower CAC allows underpricing.", marketing_war_result: "Competitive - Requires heavily targeted viral campaigns.", feature_war_result: "Crushing - AI orchestration layer cannot be replicated quickly." };
+        const mockDna = { innovation_dna: 96, growth_dna: 88, funding_dna: 85, business_dna: 72, risk_dna: 34, primary_mutation: "Hyper-scalable AI Agent Architecture" };
+        const mockScenarios = { scenarios: [
+          { name: "Aggressive Growth", strategy: "Raise Series A, burn high to capture market share.", success_probability: 45.0, revenue_outcome: "$50M ARR (Year 3)", risk_level: "Extreme" },
+          { name: "Bootstrapped", strategy: "Organic growth, zero VC funding.", success_probability: 82.0, revenue_outcome: "$5M ARR (Year 3)", risk_level: "Low" },
+          { name: "Enterprise Focus", strategy: "Target Fortune 500 exclusively.", success_probability: 60.5, revenue_outcome: "$20M ARR (Year 3)", risk_level: "High" },
+          { name: "Global Expansion", strategy: "Launch in EU and Asia immediately.", success_probability: 35.0, revenue_outcome: "$100M ARR (Year 3)", risk_level: "Critical" }
+        ]};
+        
+        await new Promise(r => setTimeout(r, 1500));
+        setData({ warRoom: mockWarRoom, dna: mockDna, scenarios: mockScenarios });
       } catch (err) {
         console.error("Failed to fetch multiverse", err);
       } finally {

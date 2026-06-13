@@ -12,13 +12,14 @@ export default function IntelligencePage() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [brain, unicorn, xray, impact] = await Promise.all([
-          fetch("http://localhost:8000/api/intelligence/market-brain").then(r => r.json()),
-          fetch("http://localhost:8000/api/intelligence/unicorn-score").then(r => r.json()),
-          fetch("http://localhost:8000/api/intelligence/investor-xray").then(r => r.json()),
-          fetch("http://localhost:8000/api/intelligence/impact-score").then(r => r.json())
-        ]);
-        setData({ brain, unicorn, xray, impact });
+        // Self-contained mock data for Vercel demo
+        const mockBrain = { momentum_score: 94, trend_velocity: "Accelerating (+14% WoW)", disruption_potential: "Extreme", live_signals: [ {source: "Reddit", sentiment: "Bullish", content: "Developers are heavily discussing automated coding platforms."}, {source: "Venture News", sentiment: "Neutral", content: "Sequoia recently raised a $1B fund focusing on AI agents."} ] };
+        const mockUnicorn = { unicorn_probability: 8.7, success_probability: 74.5, acquisition_probability: 45.2, ipo_probability: 12.4 };
+        const mockXray = { loves: ["High recurring revenue potential.", "Strong network effects."], deal_breakers: ["Founding team lacks deep technical expertise.", "TAM is smaller than projected."] };
+        const mockImpact = { global_impact_score: 84, jobs_created: 1500 };
+        
+        await new Promise(r => setTimeout(r, 1500));
+        setData({ brain: mockBrain, unicorn: mockUnicorn, xray: mockXray, impact: mockImpact });
       } catch (err) {
         console.error("Failed to fetch intelligence", err);
       } finally {

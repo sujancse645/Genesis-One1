@@ -23,12 +23,17 @@ export default function PitchDeckPage() {
   const handleGenerate = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/pitch/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startup_idea: "Autonomous Coding Agent" }),
-      });
-      const data = await res.json();
+      // Self-contained mock data for Vercel demo
+      await new Promise(r => setTimeout(r, 2000));
+      const data = {
+        slides: [
+          { title: "The Problem", content: ["Developers waste 40% of time on boilerplate.", "Current AI tools lack full-stack context."], visual_type: "none" },
+          { title: "The Solution", content: ["Autonomous multi-agent orchestration.", "End-to-end repository generation."], visual_type: "none" },
+          { title: "Market Size", content: ["$120B TAM by 2030.", "Enterprise SaaS is the primary wedge."], visual_type: "chart_tam" },
+          { title: "Financial Projections", content: ["$10M ARR in Year 5.", "90% gross margins."], visual_type: "chart_mrr" },
+          { title: "The Ask", content: ["$1.5M Seed Round.", "18 months runway."], visual_type: "metric" }
+        ]
+      };
       setDeck(data);
     } catch (err) {
       console.error(err);

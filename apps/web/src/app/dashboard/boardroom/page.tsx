@@ -48,26 +48,39 @@ export default function BoardroomPage() {
 
   const initiateSession = () => {
     setIsSessionActive(true);
-    setMessages([]);
-    ws.current = new WebSocket('ws://localhost:8000/api/boardroom/ws');
+    setMessages([{ role: 'system', agent: 'System', message: 'Board session initiated. Synthesizing agents...' }]);
     
-    ws.current.onopen = () => {
-      ws.current?.send("START");
-    };
+    // Self-contained mock data for Vercel demo
+    const mockMessages = [
+      { agent: 'Sarah (CEO)', role: 'CEO', message: 'Team, we need to finalize our GTM strategy for the new AI agent platform. Marketing, what is the CAC looking like for enterprise clients?' },
+      { agent: 'David (Marketing)', role: 'Marketing', message: 'If we target Fortune 500 exclusively, CAC will be around $15,000, but LTV is north of $120k. The real issue is the sales cycle length.' },
+      { agent: 'Marcus (CTO)', role: 'CTO', message: 'I can build a self-serve tier that reduces the sales cycle to zero, but we would need to simplify the multi-agent orchestration UI significantly.' },
+      { agent: 'Elena (Finance)', role: 'Finance', message: 'A self-serve tier would burn through our cloud compute credits too quickly. We only have 18 months of runway left. I vote we stick to enterprise.' },
+      { role: 'system', agent: 'System', message: 'Board reached preliminary consensus: Prioritize Enterprise Sales Motion.' }
+    ];
 
-    ws.current.onmessage = (event) => {
-      const data: ChatMessage = JSON.parse(event.data);
-      
-      setMessages((prev) => {
-        // If there's an existing typing indicator for this agent, remove it
-        const filtered = prev.filter(m => !(m.is_typing && m.agent === data.agent));
-        return [...filtered, data];
-      });
-    };
+    setTimeout(() => {
+      setMessages(prev => [...prev, { agent: mockMessages[0].agent, role: mockMessages[0].role, is_typing: true }]);
+    }, 1000);
 
-    return () => {
-      ws.current?.close();
-    };
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < mockMessages.length) {
+        const msg = mockMessages[i];
+        setMessages(prev => {
+          const filtered = prev.filter(m => !m.is_typing);
+          return [...filtered, msg];
+        });
+        i++;
+        if (i < mockMessages.length) {
+          setMessages(prev => [...prev, { agent: mockMessages[i].agent, role: mockMessages[i].role, is_typing: true }]);
+        }
+      } else {
+        clearInterval(interval);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
   };
 
   return (

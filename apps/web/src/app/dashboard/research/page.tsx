@@ -55,12 +55,24 @@ export default function ResearchPage() {
     }, 400);
 
     try {
-      const res = await fetch('http://localhost:8000/api/research/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startup_idea: idea, demo_mode: true }),
-      });
-      const result = await res.json();
+      // Self-contained mock data for Vercel demo
+      await new Promise(r => setTimeout(r, 2000));
+      const result = {
+        tam: 120.5,
+        sam: 30.2,
+        som: 5.1,
+        swot: {
+          Strengths: ["High barrier to entry", "Proprietary AI routing"],
+          Weaknesses: ["High compute costs", "Unproven enterprise sales"],
+          Opportunities: ["B2B SaaS integration", "Automated DevOps"],
+          Threats: ["Incumbent LLM providers", "Open-source alternatives"]
+        },
+        competitors: [
+          { name: "Devin", strength: "First mover advantage", weakness: "High latency", threat_level: 9 },
+          { name: "GitHub Copilot", strength: "Massive distribution", weakness: "Single-file context", threat_level: 8 }
+        ],
+        opportunity_score: 92
+      };
       setData(result);
     } catch (error) {
       console.error(error);

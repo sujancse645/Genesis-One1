@@ -24,12 +24,31 @@ export default function SimulationPage() {
     setScenario(selectedScenario);
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/simulation/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scenario: selectedScenario }),
-      });
-      const result = await res.json();
+      // Self-contained mock data for Vercel demo
+      await new Promise(r => setTimeout(r, 2000));
+      const result: MonthData[] = [];
+      let currentUsers = 100;
+      let currentMrr = 1500;
+      let currentCash = 1500000;
+      let currentBurn = 50000;
+      const growthRate = selectedScenario === 'Aggressive' ? 1.2 : selectedScenario === 'Conservative' ? 1.05 : 1.01;
+      
+      for(let m = 1; m <= 60; m++) {
+        currentUsers = Math.floor(currentUsers * growthRate);
+        currentMrr = Math.floor(currentMrr * growthRate);
+        currentBurn = Math.floor(currentBurn * 1.02);
+        currentCash = currentCash - currentBurn + currentMrr;
+        result.push({
+          month: m,
+          users: currentUsers,
+          mrr: currentMrr,
+          cash_balance: currentCash,
+          burn_rate: currentBurn,
+          cac: 150 * (1 - (m*0.01)),
+          ltv: 450 * (1 + (m*0.01)),
+          churn: 0.05
+        });
+      }
       setData(result);
     } catch (err) {
       console.error(err);
