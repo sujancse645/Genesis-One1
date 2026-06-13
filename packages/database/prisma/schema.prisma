@@ -1,0 +1,358 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------
+// Core Tables
+// ------------------------------------------------------
+
+model User {
+  id        String    @id @default(uuid())
+  clerkId   String    @unique
+  email     String    @unique
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  role      UserRole  @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  organizations OrganizationMember[]
+  startups      Startup[]
+  activityLogs  ActivityLog[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  INVESTOR
+}
+
+model Organization {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  imageUrl  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  members  OrganizationMember[]
+  teams    Team[]
+  startups Startup[]
+}
+
+model OrganizationMember {
+  id             String   @id @default(uuid())
+  userId         String
+  organizationId String
+  role           OrgRole  @default(MEMBER)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Team {
+  id             String    @id @default(uuid())
+  organizationId String
+  name           String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  startups     Startup[]
+}
+
+// ------------------------------------------------------
+// Startup & Simulation Tables
+// ------------------------------------------------------
+
+model Startup {
+  id             String    @id @default(uuid())
+  ownerId        String
+  organizationId String?
+  teamId         String?
+  name           String
+  description    String
+  industry       String?
+  mission        String?
+  vision         String?
+  problem        String?
+  solution       String?
+  targetMarket   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  owner        User          @relation(fields: [ownerId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  team         Team?         @relation(fields: [teamId], references: [id])
+
+  agents            Agent[]
+  simulations       Simulation[]
+  marketResearch    MarketResearch[]
+  competitors       Competitor[]
+  investorReports   InvestorReport[]
+  boardroomSessions BoardroomSession[]
+  documents         Document[]
+  pitchDecks        PitchDeck[]
+}
+
+// ------------------------------------------------------
+// Agents & Boardroom
+// ------------------------------------------------------
+
+model Agent {
+  id           String    @id @default(uuid())
+  startupId    String
+  role         AgentRole
+  name         String
+  systemPrompt String
+  memoryConfig Json? // Config for Qdrant connection / constraints
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  startup  Startup            @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  runs     AgentRun[]
+  messages BoardroomMessage[]
+}
+
+enum AgentRole {
+  CEO
+  CTO
+  PRODUCT
+  MARKETING
+  FINANCE
+  INVESTOR
+  LEGAL
+  COMPETITOR
+  INNOVATION
+}
+
+model AgentRun {
+  id          String    @id @default(uuid())
+  agentId     String
+  status      RunStatus @default(PENDING)
+  input       Json
+  output      Json?
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+  tokensUsed  Int       @default(0)
+  costUSD     Float     @default(0.0)
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+enum RunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model BoardroomSession {
+  id        String        @id @default(uuid())
+  startupId String
+  topic     String
+  status    SessionStatus @default(ACTIVE)
+  consensus String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  startup  Startup            @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  messages BoardroomMessage[]
+}
+
+enum SessionStatus {
+  ACTIVE
+  PAUSED
+  CONCLUDED
+}
+
+model BoardroomMessage {
+  id        String   @id @default(uuid())
+  sessionId String
+  agentId   String
+  content   String
+  timestamp DateTime @default(now())
+
+  session BoardroomSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  agent   Agent            @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------
+// Market Research & Competitors
+// ------------------------------------------------------
+
+model MarketResearch {
+  id               String   @id @default(uuid())
+  startupId        String
+  tam              Float?
+  sam              Float?
+  som              Float?
+  swot             Json?
+  customerPersonas Json?
+  marketGaps       Json?
+  opportunityScore Float?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model Competitor {
+  id          String   @id @default(uuid())
+  startupId   String
+  name        String
+  description String?
+  strengths   Json?
+  weaknesses  Json?
+  pricing     Json?
+  threatLevel Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------
+// Simulation & Digital Twin
+// ------------------------------------------------------
+
+model Simulation {
+  id         String    @id @default(uuid())
+  startupId  String
+  name       String
+  parameters Json // e.g., market conditions, initial capital
+  status     RunStatus @default(PENDING)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  startup Startup            @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  results SimulationResult[]
+}
+
+model SimulationResult {
+  id           String   @id @default(uuid())
+  simulationId String
+  month        Int // Month of simulation (1, 6, 12, etc.)
+  userGrowth   Int?
+  revenue      Float?
+  churn        Float?
+  cac          Float?
+  ltv          Float?
+  burnRate     Float?
+  cashBalance  Float?
+  metrics      Json?
+  createdAt    DateTime @default(now())
+
+  simulation Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------
+// Pitch Decks & Investor Reports
+// ------------------------------------------------------
+
+model InvestorReport {
+  id                 String   @id @default(uuid())
+  startupId          String
+  innovationScore    Float?
+  marketFitScore     Float?
+  scalabilityScore   Float?
+  monetizationScore  Float?
+  executionScore     Float?
+  defensibilityScore Float?
+  fundingReadiness   Float?
+  valuationEstimate  Float?
+  investmentRec      String?
+  dueDiligence       Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model PitchDeck {
+  id        String   @id @default(uuid())
+  startupId String
+  title     String
+  content   Json // Contains slide content
+  pdfUrl    String?
+  pptxUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+// ------------------------------------------------------
+// Documents, Uploads & System Logs
+// ------------------------------------------------------
+
+model Document {
+  id        String    @id @default(uuid())
+  startupId String
+  title     String
+  content   String // Markdown or rich text
+  type      String // e.g., 'research', 'legal', 'financial'
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model Upload {
+  id         String   @id @default(uuid())
+  uploaderId String
+  fileName   String
+  fileUrl    String
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+
+  // Note: Uploads might not strictly tie to a startup if they are user avatars, etc.
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  // Relation can be added if needed
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entityType String // e.g., 'Startup', 'Agent'
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
