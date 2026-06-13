@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from routers import orchestrator, research, simulation, boardroom, pitch
+from routers import orchestrator, research, simulation, boardroom, pitch, intelligence, multiverse
 
 app = FastAPI(
     title="Genesis One API",
@@ -13,8 +13,10 @@ app = FastAPI(
 app.include_router(orchestrator.router)
 app.include_router(research.router)
 app.include_router(simulation.router)
-app.include_router(boardroom.router)
-app.include_router(pitch.router)
+app.include_router(boardroom.router, prefix="/api/boardroom", tags=["Boardroom"])
+app.include_router(pitch.router, prefix="/api/pitch", tags=["Pitch"])
+app.include_router(intelligence.router, prefix="/api/intelligence", tags=["Intelligence"])
+app.include_router(multiverse.router, prefix="/api/multiverse", tags=["Multiverse"])
 
 # Enable CORS for the frontend
 app.add_middleware(

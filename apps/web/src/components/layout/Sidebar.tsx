@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Network, Activity, TrendingUp, Users, Presentation, Search, LayoutDashboard } from 'lucide-react';
+import { Network, Activity, TrendingUp, Users, Presentation, Search, LayoutDashboard, BrainCircuit, Rocket } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 
 export default function Sidebar() {
@@ -16,6 +16,9 @@ export default function Sidebar() {
     { name: 'Digital Twin', href: '/dashboard/simulation', icon: TrendingUp },
     { name: 'AI Boardroom', href: '/dashboard/boardroom', icon: Users },
     { name: 'Pitch Deck', href: '/dashboard/pitch', icon: Presentation },
+    { name: 'Intelligence', href: '/dashboard/intelligence', icon: BrainCircuit },
+    { name: 'Multiverse', href: '/dashboard/multiverse', icon: Network },
+    { name: 'Startup Galaxy', href: '/dashboard/galaxy', icon: Rocket, color: 'text-red-500' },
   ];
 
   return (

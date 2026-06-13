@@ -1,6 +1,7 @@
 import React from 'react';
 import Sidebar from '@/components/layout/Sidebar';
-import { ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
+import { ClerkLoaded, ClerkLoading, SignedIn, UserButton } from '@clerk/nextjs';
+import Copilot from "@/components/intelligence/Copilot";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 relative w-full h-full overflow-hidden bg-neutral-950">
           {children}
         </main>
+        
+        {/* Persistent Floating Copilot */}
+        <Copilot />
       </ClerkLoaded>
     </div>
   );
