@@ -1,6 +1,6 @@
 import React from 'react';
 import Sidebar from '@/components/layout/Sidebar';
-import { ClerkLoaded, ClerkLoading, SignedIn, UserButton } from '@clerk/nextjs';
+import { ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
 import Copilot from "@/components/intelligence/Copilot";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
