@@ -77,7 +77,7 @@ export default function HiveMindPage() {
           className="bg-[#050505]"
           colorMode="dark"
         >
-          <Background color="#ffffff" gap={20} size={1} opacity={0.05} />
+          <Background color="#ffffff" gap={20} size={1} />
           <Controls className="bg-black border border-white/10 fill-white" />
         </ReactFlow>
       </div>
