@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ response: "SYSTEM OFFLINE: GEMINI_API_KEY is missing in Vercel environment variables." });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
     const prompt = `You are the Genesis Founder Copilot, an elite AI operating system designed to advise startup founders. You are highly strategic, extremely concise, and speak with high confidence. Keep responses under 3 sentences.
     
     Founder: ${message}

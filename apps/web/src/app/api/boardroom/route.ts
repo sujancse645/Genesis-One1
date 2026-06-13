@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "GEMINI_API_KEY is missing." }, { status: 500 });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
     const prompt = `
 You are an AI Board of Directors consisting of a CEO, CTO, and Finance Agent.
 The user (Founder) just said: "${message}"
